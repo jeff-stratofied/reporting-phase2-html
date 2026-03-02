@@ -1230,7 +1230,7 @@ import {
   getUserOwnershipPct
 } from "./ownershipEngine.js?v=dev";
 
-import { USERS, loadUsers } from '/loan-valuation/users.js?v=dev';
+import { USERS, loadUsers } from '/reporting-phase2/users.js?v=dev';
 
 window.__closeDrawerTimer = null;
 
@@ -1248,7 +1248,7 @@ const PAGE_CONTEXT = (() => {
 if (PAGE_CONTEXT.isEmbed) {
   const params = new URLSearchParams(window.location.search);
   const user   = params.get("user") || "jeff";
-  const base   = `/loan-valuation/roi-shell.html?user=${user}&from=reporting`;
+  const base   = `/reporting-phase2/roi-shellPhase2.html?user=${user}&from=reporting`;
 
   function goToShell(extra = {}) {
     const url = new URL(base, window.location.origin);
@@ -1945,7 +1945,7 @@ function deriveLoanPurchaseDate(loan) {
     
 async function loadLoans() {
   const res = await fetch(
-    "https://loan-valuation-api.jeff-263.workers.dev/loans"
+    "https://reporting-phase2-api.jeff-263.workers.dev/loans"
   );
   const data = await res.json();
 
@@ -5293,7 +5293,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Redirect clicks to full view
     const user = PAGE_USER || "jeff";
-    const fullUrl = `/loan-valuation/roi-shell.html?user=${user}&from=reporting&open=kpi2`;
+    const fullUrl = `/reporting-phase2/roi-shellPhase2.html?user=${user}&from=reporting&open=kpi2`;
     ["closeBtn", "downloadCsvBtn", "printBtn", "copyCsvBtn"].forEach(id => {
       document.getElementById(id)?.addEventListener("click", e => {
         e.preventDefault();
@@ -5424,7 +5424,7 @@ document.querySelector('.grid')?.addEventListener('scroll', () => {
     
 </script>
 
-<script src="/loan-valuation/feedback.js"></script>
+<script src="/reporting-phase2/feedback.js"></script>
 
 </body>
 </html>
