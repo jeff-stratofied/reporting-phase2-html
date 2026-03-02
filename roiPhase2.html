@@ -1040,12 +1040,15 @@ body.shell .header-controls {
     </p>
       </div>
   
+
       <div class="header-controls">
         <div style="font-size:13px;color:var(--muted)">
           Name: <strong id="currentUserLabel" style="color:var(--brand)"></strong>
         </div>
         <button id="themeToggle" class="theme-icon" title="Toggle dark mode">🌙</button>
       </div>
+
+
     </div>
 
     <div class="current-date" id="currentDateLabel">
@@ -5426,14 +5429,10 @@ document.querySelector('.grid')?.addEventListener('scroll', () => {
 
 document.addEventListener("DOMContentLoaded", () => {
   if (PAGE_CONTEXT.isShell) {
-
-    // Find the name + theme toggle container
-    const nameThemeBox = document.querySelector(".name-toggle-wrap");
-
-    if (nameThemeBox) {
-      nameThemeBox.style.display = "none";
+    const headerControls = document.querySelector(".header-controls");
+    if (headerControls) {
+      headerControls.style.display = "none";
     }
-
   }
 });
 
