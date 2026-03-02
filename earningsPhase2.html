@@ -1535,6 +1535,9 @@ const viewButtons = document.querySelectorAll(".view-btn");
 // -----------------------------
 
   function applyViewMode(mode) {
+// Earnings Phase2: table-only mode
+mode = "table";
+
   // Clear active buttons
   viewButtons.forEach(b => b.classList.remove("active"));
 
