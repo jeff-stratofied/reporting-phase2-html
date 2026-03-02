@@ -206,37 +206,23 @@ html, body {
 }
 
     
-/* ROI matches Earnings:
-   Page does NOT scroll; grid owns scrolling */
-.app {
-  height: 100%;
-  overflow: hidden;
-  background: var(--surface);
+   .app {
+  max-width: 1680px;
+  margin: 20px auto 0 auto;
+  padding: 16px 16px 0 16px;
+  transition: color .25s ease;
 }
 
-body{
-  background: linear-gradient(180deg, var(--grad-top) 0%, var(--grad-bottom) 100%);
-  background-color: var(--bg);
-  transition: background-color .25s ease, color .25s ease;
+body > .app {
+  background: transparent;
+  padding-top: 16px;
+  margin-top: 0;
 }
 
 /* Dark mode gradient (match Amort exactly) */
 html[data-theme="dark"] body {
   background: linear-gradient(180deg,#0b1224 0%, #0f172a 100%);
 }
-
-    .app{
-      max-width:1200px;
-      margin:20px auto 0 auto;
-      padding:16px 16px 0 16px;
-    }
-    
-
-    body > .app {
-       background: transparent;
-      padding-top: 16px;
-      margin-top: 0;
-    }
 
 
     header {
@@ -969,6 +955,62 @@ tr.event-default td {
 body.shell .header-controls {
   display: none;
 }
+
+
+#loanTable .ownership-cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#loanTable .ownership-cell svg {
+  display: block;
+}
+
+#loanTable th:nth-child(3) {
+  text-align: center;
+}
+
+#loanTable th[data-key="eventType"] {
+  text-align: center;
+}
+
+#loanTable td:nth-child(2) {
+  text-align: center;
+}
+
+#loanTable td:nth-child(2) {
+  white-space: nowrap;
+}
+
+
+#loanTable .table-event-badge {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+  will-change: transform;
+}
+
+#loanTable .table-event-badge:hover {
+  transform: translateY(-2px) scale(1.15);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  filter: brightness(1.05);
+}
+
+
+/* delete
+#loanTable .event-round-badge {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+#loanTable .event-round-badge:hover {
+  transform: translateY(-2px) scale(1.08);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.event-round-badge:hover {
+  transform: scale(1.25);
+  filter: brightness(1.05);
+}
+*/
     
   </style>
 </head>
@@ -1064,6 +1106,7 @@ body.shell .header-controls {
         <!-- 🔑 ROI instead of Balance -->
         <th data-key="loanId">ID</th>
         <th data-key="eventType">Event</th>
+        <th data-key="ownedPct">% Owned</th>
         <th data-key="loanName">Loan</th>
         <th data-key="school">School</th>
         <th data-key="loanStartDate">Loan Start</th>
@@ -1073,7 +1116,6 @@ body.shell .header-controls {
         <th data-key="nominalRate">Rate</th>
         <th data-key="termYears">Term</th>
         <th data-key="graceYears">Grace</th>
-        <th data-key="ownedPct">% Owned</th>
         <th data-key="roiToDate">ROI</th>
       </tr>
     </thead>
@@ -1188,7 +1230,7 @@ import {
   getUserOwnershipPct
 } from "./ownershipEngine.js?v=dev";
 
-import { USERS, loadUsers } from '/reporting-phase2/users.js?v=dev';
+import { USERS, loadUsers } from '/loan-valuation/users.js?v=dev';
 
 window.__closeDrawerTimer = null;
 
@@ -1206,7 +1248,7 @@ const PAGE_CONTEXT = (() => {
 if (PAGE_CONTEXT.isEmbed) {
   const params = new URLSearchParams(window.location.search);
   const user   = params.get("user") || "jeff";
-  const base   = `/reporting-phase2/roi-shellPhase2.html?user=${user}&from=reporting`;
+  const base   = `/loan-valuation/roi-shell.html?user=${user}&from=reporting`;
 
   function goToShell(extra = {}) {
     const url = new URL(base, window.location.origin);
@@ -1510,20 +1552,23 @@ function getPrimaryEventType(loan) {
 }
 
 function renderEventBadgeCell(loan) {
-  const type = getPrimaryEventType(loan);
-  if (!type) return "";
+  if (!loan.events || !loan.events.length) return "";
 
-  const icon =
-    type === "prepayment" ? "💰" :
-    type === "deferral"   ? "⏸" :
-    type === "default"    ? "⚠️" : "";
+  return loan.events.map(event => {
+    const type = event.type;
 
-  return `
-    <span class="table-event-badge ${type}"
-          data-event-type="${type}">
-      ${icon}
-    </span>
-  `;
+    const icon =
+      type === "prepayment" ? "💰" :
+      type === "deferral"   ? "⏸" :
+      type === "default"    ? "⚠️" : "";
+
+    return `
+      <span class="table-event-badge ${type}"
+            data-event-type="${type}">
+        ${icon}
+      </span>
+    `;
+  }).join("");
 }
 
 // =====================================================
@@ -1900,7 +1945,7 @@ function deriveLoanPurchaseDate(loan) {
     
 async function loadLoans() {
   const res = await fetch(
-    "https://reporting-phase2-api.jeff-263.workers.dev/loans"
+    "https://loan-valuation-api.jeff-263.workers.dev/loans"
   );
   const data = await res.json();
 
@@ -3368,7 +3413,10 @@ function renderLoanTableROI(list = currentLoans) {
       <td style="text-align:center">
         ${renderEventBadgeCell(loan)}
       </td>
-
+      
+      <!-- % OWNED -->
+      <td class="ownership-cell"></td>
+      
       <td>${loan.name}</td>
       <td>${loan.school || ""}</td>
       <td>${loan.loanStartDate || ""}</td>
@@ -3384,12 +3432,18 @@ function renderLoanTableROI(list = currentLoans) {
       <td>${loan.termYears ?? ""}</td>
       <td>${loan.graceYears ?? ""}</td>
 
-      <!-- % OWNED -->
-      <td>${(ownershipPct * 100).toFixed(1)}%</td>
-
       <!-- ROI -->
       <td>${roiPct.toFixed(2)}%</td>
     `;
+
+    const ownershipCell = tr.querySelector(".ownership-cell");
+  if (ownershipCell) {
+    const pie = buildOwnershipPie(loan);
+    if (pie instanceof SVGElement) {
+      ownershipCell.appendChild(pie);
+    }
+  }
+
 
     // ----------------------------------
     // Event badge hover (table view)
@@ -3428,6 +3482,7 @@ function renderLoanTableROI(list = currentLoans) {
 
     tbody.appendChild(tr);
   });
+  
 }
 
     
@@ -3806,7 +3861,7 @@ await loadUsers();  // Load dynamic users once per page load
           if (!openKey) return;
 
           const url = new URL(
-            window.location.origin + "/reporting-phase2/roi-shellPhase2"
+            window.location.origin + "/loan-valuation/roi-shell"
           );
           url.searchParams.set("user", PAGE_USER);
           url.searchParams.set("open", openKey);
@@ -5238,7 +5293,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Redirect clicks to full view
     const user = PAGE_USER || "jeff";
-    const fullUrl = `/reporting-phase2/roi-shellPhase2.html?user=${user}&from=reporting&open=kpi2`;
+    const fullUrl = `/loan-valuation/roi-shell.html?user=${user}&from=reporting&open=kpi2`;
     ["closeBtn", "downloadCsvBtn", "printBtn", "copyCsvBtn"].forEach(id => {
       document.getElementById(id)?.addEventListener("click", e => {
         e.preventDefault();
@@ -5369,7 +5424,7 @@ document.querySelector('.grid')?.addEventListener('scroll', () => {
     
 </script>
 
-<script src="/reporting-phase2/feedback.js"></script>
+<script src="/loan-valuation/feedback.js"></script>
 
 </body>
 </html>
