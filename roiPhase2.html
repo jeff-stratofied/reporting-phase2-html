@@ -1058,27 +1058,32 @@ body.shell .header-controls {
     <!-- KPI Row -->
    <section class="kpis" id="kpis"></section>
   
-  <!-- Loan Filters -->
+<!-- Loan Filters -->
 <section class="loan-filters" id="loanFilters">
 
   <!-- LEFT: filters -->
-  <select id="filterName">
-  <option value="" disabled selected>Name</option>
-</select>
-  <select id="filterSchool">
-  <option value="" disabled selected>School</option>
-</select>
- <select id="filterRate">
-  <option value="" disabled selected>Rate</option>
-</select>
-  <select id="sortLoans">
-  <option value="" disabled selected>Sort</option>
-</select>
-  <button class="btn secondary" id="resetFilters">Reset</button>
+  <div class="filter-controls">
+    <select id="filterName">
+      <option value="" disabled selected>Name</option>
+    </select>
 
-  <!-- RIGHT: view + actions -->
+    <select id="filterSchool">
+      <option value="" disabled selected>School</option>
+    </select>
 
+    <select id="filterRate">
+      <option value="" disabled selected>Rate</option>
+    </select>
 
+    <select id="sortLoans">
+      <option value="" disabled selected>Sort</option>
+    </select>
+
+    <button class="btn secondary" id="resetFilters">Reset</button>
+  </div>
+
+  <!-- RIGHT: actions -->
+  <div class="filter-actions">
     <div class="table-actions">
       <button class="btn" id="downloadAllCsvBtn">Download CSV</button>
       <button class="btn" id="copyAllCsvBtn">Copy CSV</button>
