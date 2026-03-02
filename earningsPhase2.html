@@ -1217,6 +1217,29 @@ body.shell .header-controls {
 html[data-theme="dark"] #loanTable tbody tr:nth-child(even) {
   background: rgba(255,255,255,0.02);
 }
+
+
+#loanTable td.ownership-cell {
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* =========================================
+   EARNINGS TABLE — ROI badge animation
+   ========================================= */
+
+   #loanTable .event-badge.mini {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+  will-change: transform;
+}
+
+#loanTable .event-badge.mini:hover {
+  transform: translateY(-2px) scale(1.15);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  filter: brightness(1.05);
+}
+
+
     
   </style>
 </head>
@@ -1327,6 +1350,7 @@ html[data-theme="dark"] #loanTable tbody tr:nth-child(even) {
       <tr>
         <th data-key="loanId">ID</th>
         <th data-key="eventType">Event</th>
+        <th data-key="ownershipPct">% Owned</th>
         <th data-key="loanName">Loan</th>
         <th data-key="school">School</th>
         <th data-key="loanStartDate">Loan Start</th>
@@ -1336,7 +1360,6 @@ html[data-theme="dark"] #loanTable tbody tr:nth-child(even) {
         <th data-key="nominalRate">Rate</th>
         <th data-key="termYears">Term</th>
         <th data-key="graceYears">Grace</th>
-        <th data-key="ownershipPct">% Owned</th>
         <th data-key="netEarnings">Earnings</th>
       </tr>
     </thead>
@@ -1417,7 +1440,7 @@ import {
   getUserOwnershipPct
 } from "./ownershipEngine.js?v=dev";
 
-import { USERS, loadUsers } from '/loan-valuation/users.js?v=dev';
+import { USERS, loadUsers } from '/reporting-phase2/users.js?v=dev';
   
 
 let earningsDataReadyResolve;
@@ -1618,7 +1641,7 @@ const TODAY = getStandardToday();
 // =====================================================
 function redirectToFullEarnings(openParam = "projected") {
   const url =
-    `/loan-valuation/earnings-shell.html` +
+    `/reporting-phase2/earnings-shellPhase2.html` +
     `?user=${PAGE_USER}` +
     `&from=reporting` +
     (openParam ? `&open=${encodeURIComponent(openParam)}` : "");
@@ -2402,7 +2425,7 @@ document.querySelectorAll(".kpi").forEach(tile => {
     // ✅ IFRAME: always escape to full page, preserve which KPI was clicked
     if (isEmbed) {
       const url =
-        `/loan-valuation/earnings-shell.html` +
+        `/reporting-phase2/earnings-shellPhase2.html` +
         `?user=${PAGE_USER}` +
         `&from=reporting` +
         `&open=${type}`;
@@ -4460,17 +4483,18 @@ function renderLoanTable(loans) {
   const tbody = table?.querySelector("tbody");
   if (!tbody) return;
 
-  // Define ICONS to match amort page (deferral: pause, default: warning, prepayment: money bag)
+  // Define ICONS to match amort page
   const ICONS = {
     deferral: '⏸',
     default: '⚠️',
-    prepayment: '💰'  // Adjust if amort uses different icons
+    prepayment: '💰'
   };
 
   // -------------------------
   // Render rows
   // -------------------------
   tbody.innerHTML = "";
+
   loans.forEach(loan => {
     const tr = document.createElement("tr");
 
@@ -4484,31 +4508,36 @@ function renderLoanTable(loans) {
 
     const pct = Math.max(0, Math.min(1, loan.ownershipPct ?? 0));
 
-    // Build events column manually so we can attach hover listeners to each badge
+    // -------------------------
+    // Build Events Column
+    // -------------------------
     let eventsContent = "";
     if (loan.events?.length > 0) {
       loan.events.forEach(event => {
         const badgeClass = `event-badge mini ${event.type}`;
-const icon = ICONS[event.type] || '';  // Safe fallback if type unknown
+        const icon = ICONS[event.type] || '';
+        const eventData = JSON.stringify(event).replace(/"/g, '&quot;');
 
-// Store event data on the badge for tooltip
-const eventData = JSON.stringify(event).replace(/"/g, '&quot;');
-
-eventsContent += `
-  <span class="${badgeClass}"
-        data-event='${eventData}'
-        title="">
-    <span class="event-badge-icon">${icon}</span>
-  </span>
-`;
+        eventsContent += `
+          <span class="${badgeClass}"
+                data-event='${eventData}'
+                title="">
+            <span class="event-badge-icon">${icon}</span>
+          </span>
+        `;
       });
     } else {
       eventsContent = " ";
     }
 
+    // -------------------------
+    // IMPORTANT CHANGE HERE
+    // Replace numeric % column with ownership-cell
+    // -------------------------
     tr.innerHTML = `
       <td>${loan.loanId ?? ""}</td>
       <td>${eventsContent}</td>
+      <td class="ownership-cell"></td>
       <td>${loan.loanName ?? ""}</td>
       <td>${loan.school ?? ""}</td>
       <td>${loan.loanStartDate ? formatDate(new Date(loan.loanStartDate)) : ""}</td>
@@ -4518,75 +4547,114 @@ eventsContent += `
       <td>${(Number(loan.nominalRate ?? 0) * 100).toFixed(2)}%</td>
       <td>${loan.termYears ?? ""}</td>
       <td>${loan.graceYears ?? 0}</td>
-      <td>${(pct * 100).toFixed(1)}%</td>
       <td>${formatCurrency(getCurrentNetEarnings(loan))}</td>
     `;
 
-    // Attach hover listeners to each badge after it's in the DOM
-    const badges = tr.querySelectorAll('.event-badge');
-    badges.forEach(badge => {
-badge.addEventListener("mouseenter", (e) => {
-  try {
-    const eventJson = badge.dataset.event;
-    if (!eventJson) return;
-
-    const event = JSON.parse(eventJson);
-
-    const lines = [];
-
-    if (event.type === "prepayment") {
-      lines.push(
-        "Prepayment",
-        `Date: ${formatDate(new Date(event.date + "T00:00:00"))}`,
-        `Amount: ${formatCurrency(event.amount)}`
-      );
+    // -------------------------
+    // Inject Ownership Pie (MATCH AMORT)
+    // -------------------------
+    const ownershipCell = tr.querySelector(".ownership-cell");
+    if (ownershipCell) {
+      ownershipCell.innerHTML = `
+  <div class="loan-badges">
+    ${buildOwnershipPie(loan)}
+  </div>
+`;
     }
 
-    if (event.type === "default") {
-      lines.push(
-        "Default",
-        `Date: ${formatMonthYear(new Date(event.date + "T00:00:00"))}`,
-        `Recovered: ${formatCurrency(event.recovered ?? 0)}`
-      );
-    }
+    const pie = ownershipCell.querySelector('.ownership-pie');
 
-    if (event.type === "deferral") {
-      lines.push(
-        "Deferral",
-        `Start: ${formatMonthYear(new Date(event.startDate + "T00:00:00"))}`,
-        `Months: ${event.months}`
-      );
-    }
+if (pie) {
+  pie.addEventListener("mouseenter", () => {
+    // Match tile hover behavior
+    const pct = Math.max(0, Math.min(1, loan.ownershipPct ?? 0));
 
-    if (!lines.length) return;
+    const lines = [
+      "Ownership",
+      `${(pct * 100).toFixed(1)}% owned`,
+      `${formatCurrency(loan.purchasePrice * pct)} invested`
+    ];
 
-    // ✅ Earnings canonical tooltip system
     setMiniTooltipContent(lines);
-    const rowRect = tr.getBoundingClientRect();
 
-// Horizontal: center over Events column
-const eventCell = tr.querySelector("td:nth-child(2)");
-const cellRect = eventCell.getBoundingClientRect();
-const x = cellRect.left + cellRect.width / 2;
+    const rect = pie.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top - 8;
 
-// Vertical: lift ABOVE the entire row (tile parity)
-const y = rowRect.top - 8;
+    positionMiniTooltip(x, y, 32);
 
-positionMiniTooltip(x, y, 32);
-
-    // ✅ MATCH AMORT: highlight row on badge hover
     tr.classList.add("row-hover");
+  });
 
-  } catch (err) {
-    console.warn("Failed to show tooltip", err);
-  }
-});
+  pie.addEventListener("mouseleave", () => {
+    hideMiniTooltip();
+    tr.classList.remove("row-hover");
+  });
+}
 
-badge.addEventListener("mouseleave", () => {
-  hideMiniTooltip();
-  tr.classList.remove("row-hover");
-});
-});
+    // -------------------------
+    // Event Badge Hover Logic
+    // -------------------------
+    const badges = tr.querySelectorAll('.event-badge');
+
+    badges.forEach(badge => {
+
+      badge.addEventListener("mouseenter", (e) => {
+        try {
+          const eventJson = badge.dataset.event;
+          if (!eventJson) return;
+
+          const event = JSON.parse(eventJson);
+          const lines = [];
+
+          if (event.type === "prepayment") {
+            lines.push(
+              "Prepayment",
+              `Date: ${formatDate(new Date(event.date + "T00:00:00"))}`,
+              `Amount: ${formatCurrency(event.amount)}`
+            );
+          }
+
+          if (event.type === "default") {
+            lines.push(
+              "Default",
+              `Date: ${formatMonthYear(new Date(event.date + "T00:00:00"))}`,
+              `Recovered: ${formatCurrency(event.recovered ?? 0)}`
+            );
+          }
+
+          if (event.type === "deferral") {
+            lines.push(
+              "Deferral",
+              `Start: ${formatMonthYear(new Date(event.startDate + "T00:00:00"))}`,
+              `Months: ${event.months}`
+            );
+          }
+
+          if (!lines.length) return;
+
+          setMiniTooltipContent(lines);
+
+          const rowRect = tr.getBoundingClientRect();
+          const eventCell = tr.querySelector("td:nth-child(2)");
+          const cellRect = eventCell.getBoundingClientRect();
+          const x = cellRect.left + cellRect.width / 2;
+          const y = rowRect.top - 8;
+
+          positionMiniTooltip(x, y, 32);
+          tr.classList.add("row-hover");
+
+        } catch (err) {
+          console.warn("Failed to show tooltip", err);
+        }
+      });
+
+      badge.addEventListener("mouseleave", () => {
+        hideMiniTooltip();
+        tr.classList.remove("row-hover");
+      });
+    });
+
     tr.addEventListener("mouseenter", () => tr.classList.add("row-hover"));
     tr.addEventListener("mouseleave", () => tr.classList.remove("row-hover"));
 
@@ -4595,6 +4663,7 @@ badge.addEventListener("mouseleave", () => {
     };
 
     tr.addEventListener("click", openLoan);
+
     tr.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
@@ -4651,7 +4720,7 @@ try {
 
   // 2️⃣ Load fees only (users are already handled above)
   const platformConfig = await loadPlatformConfig(
-    "https://jeff-stratofied.github.io/loan-valuation/data/platformConfig.json?ts=" + Date.now()
+    "https://jeff-stratofied.github.io/reporting-phase2/data/platformConfig.json?ts=" + Date.now()
   );
 
   // Apply fees to globals
@@ -4779,7 +4848,7 @@ try {
       (e) => {
         if (e.target.closest("button, a")) return;
         window.top.location.href =
-          `/loan-valuation/earnings-shell.html?user=${PAGE_USER}&open=kpi2`;
+          `/reporting-phase2/earnings-shellPhase2.html?user=${PAGE_USER}&open=kpi2`;
       },
       true
     );
@@ -6224,7 +6293,7 @@ window.addEventListener("popstate", (e) => {
   
   </script>
 
-<script src="/loan-valuation/feedback.js"></script>
+<script src="/reporting-phase2/feedback.js"></script>
 
   
 </body>
