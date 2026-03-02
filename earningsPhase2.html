@@ -1576,16 +1576,7 @@ if (mode === "table") {
 // -----------------------------
 function restoreViewFromStorage() {
   earningsDataReady.then(() => {
-    const isTable   = localStorage.getItem(VIEW_KEYS.table) === "1";
-    const isCompact = localStorage.getItem(VIEW_KEYS.compact) === "1";
-
-    if (isTable) {
-      applyViewMode("table");
-    } else if (isCompact) {
-      applyViewMode("compact");
-    } else {
-      applyViewMode("full");
-    }
+    applyViewMode("table");
   });
 }
 
