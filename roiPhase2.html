@@ -3865,7 +3865,7 @@ await loadUsers();  // Load dynamic users once per page load
           if (!openKey) return;
 
           const url = new URL(
-            window.location.origin + "/loan-valuation/roi-shell"
+            window.location.origin + "/reporting-phase2/roi-shellPhase2"
           );
           url.searchParams.set("user", PAGE_USER);
           url.searchParams.set("open", openKey);
