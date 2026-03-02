@@ -1099,7 +1099,7 @@ body.shell .header-controls {
   <section class="grid" id="loanGrid"></section>
 
 
-    <section id="loanTableWrap" class="loan-table-wrap">
+    <section id="loanTableWrap" class="loan-table-wrap" hidden>
   <table id="loanTable">
     <thead>
       <tr>
@@ -1317,6 +1317,58 @@ if (PAGE_CONTEXT.isEmbed) {
   if (toggle) toggle.checked = false;
 }
 
+// =========================================
+// VIEW MODE — DEFERRED RESTORE (NO RENDER)
+// =========================================
+let PENDING_VIEW_MODE = null;
+
+if (!PAGE_CONTEXT.isEmbed) {
+  PENDING_VIEW_MODE =
+    localStorage.getItem("roiViewMode") || "full";
+}
+
+    
+    const viewButtons = document.querySelectorAll(".view-btn");
+
+function setViewMode(mode) {
+  // Persist (unless embed)
+  if (!PAGE_CONTEXT.isEmbed) {
+    localStorage.setItem("roiViewMode", mode);
+  }
+
+  // Button state
+  document.querySelectorAll(".view-btn").forEach(b =>
+    b.classList.toggle("active", b.dataset.view === mode)
+  );
+
+  // Reset UI
+  loanGrid.classList.remove("compact");
+  loanGrid.style.display = "";
+  loanTableWrap.hidden = true;
+
+  if (mode === "compact") {
+    loanGrid.classList.add("compact");
+    renderLoanGrid(currentLoans);
+  }
+
+  else if (mode === "table") {
+    loanGrid.style.display = "none";
+    loanTableWrap.hidden = false;
+    renderLoanTableROI(getLoansForTableView());
+  }
+
+  else {
+    renderLoanGrid(currentLoans); // full
+  }
+
+}
+
+
+viewButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    setViewMode(btn.dataset.view);
+  });
+});
     
   const PAGE_USER =
   new URLSearchParams(window.location.search).get("user") || "jeff";
