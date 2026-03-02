@@ -1239,7 +1239,17 @@ html[data-theme="dark"] #loanTable tbody tr:nth-child(even) {
   filter: brightness(1.05);
 }
 
+.filter-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
+.loan-filters {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
     
   </style>
 </head>
@@ -1298,49 +1308,49 @@ html[data-theme="dark"] #loanTable tbody tr:nth-child(even) {
 
 <!-- Loan Filters / Sort -->
 <section class="loan-filters" id="loanFilters">
-  <select id="filterName">
-    <option value="">Name</option>
-  </select>
 
-  <select id="filterSchool">
-    <option value="">School</option>
-  </select>
+  <!-- LEFT SIDE: Filters + Reset -->
+  <div class="filter-left">
+    <select id="filterName">
+      <option value="">Name</option>
+    </select>
 
-  <select id="filterRate">
-    <option value="">Rate</option>
-    <option value="low">Below 5%</option>
-    <option value="mid">5% – 8%</option>
-    <option value="high">Above 8%</option>
-  </select>
+    <select id="filterSchool">
+      <option value="">School</option>
+    </select>
 
-  <select id="sortLoans">
-    <option value="">Sort</option>
-    <option value="purchase_asc">Purchase date ↑</option>
-    <option value="purchase_desc">Purchase date ↓</option>
-    <option value="start_asc">Loan start date ↑</option>
-    <option value="start_desc">Loan start date ↓</option>
-    <option value="amount_asc">Orig amount ↑</option>
-    <option value="amount_desc">Orig amount ↓</option>
-    <option value="rate_asc">Interest rate ↑</option>
-    <option value="rate_desc">Interest rate ↓</option>
-  </select>
+    <select id="filterRate">
+      <option value="">Rate</option>
+      <option value="low">Below 5%</option>
+      <option value="mid">5% – 8%</option>
+      <option value="high">Above 8%</option>
+    </select>
 
-  <button class="btn reset-btn" id="resetFilters">Reset filters</button>
+    <select id="sortLoans">
+      <option value="">Sort</option>
+      <option value="purchase_asc">Purchase date ↑</option>
+      <option value="purchase_desc">Purchase date ↓</option>
+      <option value="start_asc">Loan start date ↑</option>
+      <option value="start_desc">Loan start date ↓</option>
+      <option value="amount_asc">Orig amount ↑</option>
+      <option value="amount_desc">Orig amount ↓</option>
+      <option value="rate_asc">Interest rate ↑</option>
+      <option value="rate_desc">Interest rate ↓</option>
+    </select>
 
- <div class="filter-actions">
-  <div class="view-toggle" role="group" aria-label="View mode">
-    <button type="button" class="view-btn" data-view="full" title="Full tiles"><span></span></button>
-    <button type="button" class="view-btn" data-view="compact" title="Compact tiles"><span></span><span></span></button>
-    <button type="button" class="view-btn" data-view="table" title="Table view"><span></span><span></span><span></span></button>
+    <button class="btn reset-btn" id="resetFilters">
+      Reset filters
+    </button>
   </div>
 
-  <div class="table-actions">
-    <button class="btn" id="downloadAllCsvBtn">Download CSV</button>
-    <button class="btn" id="copyAllCsvBtn">Copy CSV</button>
-    <button class="btn" id="printAllBtn">Print</button>
+  <!-- RIGHT SIDE: Table Actions -->
+  <div class="filter-actions">
+    <div class="table-actions">
+      <button class="btn" id="downloadAllCsvBtn">Download CSV</button>
+      <button class="btn" id="copyAllCsvBtn">Copy CSV</button>
+      <button class="btn" id="printAllBtn">Print</button>
+    </div>
   </div>
-</div>
-
 
 </section>
 
