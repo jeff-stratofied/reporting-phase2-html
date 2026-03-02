@@ -1238,6 +1238,7 @@ const PAGE_CONTEXT = (() => {
   const p = new URLSearchParams(window.location.search);
   return {
     isEmbed: p.get("embed") === "true",
+    isShell: p.get("shell") === "true",   // ✅ ADD THIS
     user: p.get("user") || "jeff",
     open: p.get("open"),
     fromReporting: p.get("from") === "reporting"
@@ -5422,6 +5423,21 @@ document.querySelector('.grid')?.addEventListener('scroll', () => {
   if (tooltip) tooltip.style.display = 'none';
 });
     
+
+document.addEventListener("DOMContentLoaded", () => {
+  if (PAGE_CONTEXT.isShell) {
+
+    // Find the name + theme toggle container
+    const nameThemeBox = document.querySelector(".name-toggle-wrap");
+
+    if (nameThemeBox) {
+      nameThemeBox.style.display = "none";
+    }
+
+  }
+});
+
+
 </script>
 
 <script src="/reporting-phase2/feedback.js"></script>
