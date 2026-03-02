@@ -24,6 +24,7 @@ export async function loadUsers(backendUrl = "https://loan-valuation-api.jeff-26
       jeff:   { id: "jeff",   name: "Jeff Customer",   role: "customer", feeWaiver: "all"   },
       nick:   { id: "nick",   name: "Nick Lender",     role: "lender",   feeWaiver: "setup" },
       john:   { id: "john",   name: "John Investor",   role: "investor", feeWaiver: "none"  },
+      john:   { id: "shane",   name: "Shane Customer",   role: "customer", feeWaiver: "none"  },
       market: { id: "market", name: "Market",          role: "market",   feeWaiver: "none"  }
     };
   }
